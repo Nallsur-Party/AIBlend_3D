@@ -36,7 +36,6 @@ class GeneratePLYOperator(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         prompt = scene.prompt_text
-        downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
         os.makedirs(downloads_dir, exist_ok=True) 
 
         # URL вашего API
@@ -49,6 +48,7 @@ class GeneratePLYOperator(bpy.types.Operator):
             response.raise_for_status()
             
             # Сохранение полученного файла
+            downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
             filepath = os.path.join(downloads_dir, f"{prompt}.ply")
             with open(filepath, 'wb') as file:
                 file.write(response.content)
