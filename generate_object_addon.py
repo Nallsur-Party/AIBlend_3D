@@ -1,4 +1,7 @@
 import bpy
+import requests
+import tempfile
+import os
 
 bl_info = {
     "name": "Генерация 3D-объекта",
@@ -10,67 +13,71 @@ bl_info = {
     "category": "Object",
 }
 
-# Свойство для хранения текста промпта
-class PromptProperty(bpy.types.PropertyGroup):
-    user_prompt: bpy.props.StringProperty(
-        name="Промпт",
-        description="Введите текст для генерации",
-        default="",
-        maxlen=1024,
-    )
-
-# Оператор для обработки кнопки
-class OBJECT_OT_generate_from_prompt(bpy.types.Operator):
-    bl_idname = "object.generate_from_prompt"
-    bl_label = "Сгенерировать"
-    bl_description = "Сгенерировать объект на основе введенного промпта"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        prompt = context.scene.prompt_properties.user_prompt
-        if not prompt:
-            self.report({'ERROR'}, "Пожалуйста, введите текст для генерации")
-            return {'CANCELLED'}
-        
-        # Пока что просто создадим куб и напечатаем промпт
-        bpy.ops.mesh.primitive_cube_add(size=2)
-        self.report({'INFO'}, f"Сгенерировано на основе промпта: {prompt}")
-        return {'FINISHED'}
-
-# Панель для интерфейса
-class VIEW3D_PT_generate_panel(bpy.types.Panel):
-    bl_label = "Генерация 3D-объекта"
-    bl_idname = "VIEW3D_PT_generate_panel"
+class PLYGeneratorPanel(bpy.types.Panel):
+    """Панель для генерации 3D объектов"""
+    bl_label = "Генератор PLY"
+    bl_idname = "VIEW3D_PT_ply_generator"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Generate'
-
+    bl_category = 'Генерация'
+    
     def draw(self, context):
         layout = self.layout
         scene = context.scene
+        
+        layout.prop(scene, "prompt_text")
+        layout.operator("object.generate_ply", text="Сгенерировать")
 
-        # Поле для ввода текста
-        layout.prop(scene.prompt_properties, "user_prompt")
-
-        # Кнопка для генерации
-        layout.operator(OBJECT_OT_generate_from_prompt.bl_idname)
-
-# Регистрация классов
-classes = [
-    PromptProperty,
-    OBJECT_OT_generate_from_prompt,
-    VIEW3D_PT_generate_panel,
-]
+class GeneratePLYOperator(bpy.types.Operator):
+    """Генерация PLY через API"""
+    bl_idname = "object.generate_ply"
+    bl_label = "Сгенерировать PLY"
+    
+    def execute(self, context):
+        scene = context.scene
+        prompt = scene.prompt_text
+        
+        # URL вашего API
+        api_url = "https://89ab-34-91-212-248.ngrok-free.app/generate"
+        payload = {"prompt": prompt}
+        
+        try:
+            # Отправка запроса на API
+            response = requests.post(api_url, json=payload)
+            response.raise_for_status()
+            
+            # Сохранение полученного файла
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".ply") as temp_file:
+                temp_file.write(response.content)
+                temp_filepath = temp_file.name
+            
+            # Импорт файла в Blender
+            bpy.ops.import_mesh.ply(filepath=temp_filepath)
+            
+            # Удаление временного файла
+            os.remove(temp_filepath)
+            
+            self.report({'INFO'}, "PLY успешно сгенерирован и загружен")
+        except requests.RequestException as e:
+            self.report({'ERROR'}, f"Ошибка API: {e}")
+        except Exception as e:
+            self.report({'ERROR'}, f"Ошибка загрузки PLY: {e}")
+        
+        return {'FINISHED'}
 
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
-    bpy.types.Scene.prompt_properties = bpy.props.PointerProperty(type=PromptProperty)
+    bpy.utils.register_class(PLYGeneratorPanel)
+    bpy.utils.register_class(GeneratePLYOperator)
+    bpy.types.Scene.prompt_text = bpy.props.StringProperty(
+        name="Текстовый запрос",
+        description="Введите текстовый запрос для генерации 3D объекта",
+        default=""
+    )
 
 def unregister():
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
-    del bpy.types.Scene.prompt_properties
+    bpy.utils.unregister_class(PLYGeneratorPanel)
+    bpy.utils.unregister_class(GeneratePLYOperator)
+    del bpy.types.Scene.prompt_text
 
 if __name__ == "__main__":
     register()
