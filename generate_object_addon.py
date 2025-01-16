@@ -36,9 +36,11 @@ class GeneratePLYOperator(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         prompt = scene.prompt_text
-        
+        downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
+        os.makedirs(downloads_dir, exist_ok=True) 
+
         # URL вашего API
-        api_url = "https://89ab-34-91-212-248.ngrok-free.app/generate"
+        api_url = "https://979e-34-91-212-248.ngrok-free.app/generate"
         payload = {"prompt": prompt}
         
         try:
@@ -47,15 +49,20 @@ class GeneratePLYOperator(bpy.types.Operator):
             response.raise_for_status()
             
             # Сохранение полученного файла
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".ply") as temp_file:
-                temp_file.write(response.content)
-                temp_filepath = temp_file.name
+            filepath = os.path.join(downloads_dir, f"{prompt}.ply")
+            with open(filepath, 'wb') as file:
+                file.write(response.content)
+            
+            #with tempfile.NamedTemporaryFile(delete=False, suffix=".ply") as temp_file:
+            #    temp_file.write(response.content)
+            #    temp_filepath = temp_file.name
+            #self.report(f"Temporary PLY file saved at: {temp_filepath}")
             
             # Импорт файла в Blender
-            bpy.ops.import_mesh.ply(filepath=temp_filepath)
+            bpy.ops.wm.ply_import(filepath=filepath )
             
             # Удаление временного файла
-            os.remove(temp_filepath)
+            #os.remove(temp_filepath)
             
             self.report({'INFO'}, "PLY успешно сгенерирован и загружен")
         except requests.RequestException as e:
