@@ -25,6 +25,9 @@ class PLYGeneratorPanel(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         
+        # Поле для ввода URL
+        layout.prop(scene, "api_url")
+        # Поле для ввода текста запроса
         layout.prop(scene, "prompt_text")
         layout.operator("object.generate_ply", text="Сгенерировать")
 
@@ -36,10 +39,13 @@ class GeneratePLYOperator(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         prompt = scene.prompt_text
-
         # URL вашего API
-        api_url = "https://979e-34-91-212-248.ngrok-free.app/generate"
+        api_url = scene.api_url
+        if not api_url:
+            self.report({'ERROR'}, "URL сервера не указан")
+            return {'CANCELLED'}
         payload = {"prompt": prompt}
+        
         
         try:
             # Отправка запроса на API
@@ -75,6 +81,12 @@ class GeneratePLYOperator(bpy.types.Operator):
 def register():
     bpy.utils.register_class(PLYGeneratorPanel)
     bpy.utils.register_class(GeneratePLYOperator)
+    bpy.types.Scene.api_url = bpy.props.StringProperty(
+        name="URL сервера",
+        description="Введите URL вашего сервера",
+        default="https://example.com/generate"
+    )
+    
     bpy.types.Scene.prompt_text = bpy.props.StringProperty(
         name="Текстовый запрос",
         description="Введите текстовый запрос для генерации 3D объекта",
@@ -84,6 +96,7 @@ def register():
 def unregister():
     bpy.utils.unregister_class(PLYGeneratorPanel)
     bpy.utils.unregister_class(GeneratePLYOperator)
+    del bpy.types.Scene.api_url
     del bpy.types.Scene.prompt_text
 
 if __name__ == "__main__":
