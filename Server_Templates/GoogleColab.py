@@ -110,7 +110,7 @@ def generate():
 from google.colab import drive
 drive.mount('/content/drive')
 
-# Чтение файла для токкена ngrock (вставьте сюда свой токкен)
+# Чтение файла для токкена ngrock (вставьте сюда свой токкен, также расположите у себя его на google disk, кроме того вам понадобится зарегистрированный аккаунт на ngrock)
 with open('/content/drive/My Drive/ControlPassword/token_ngrock.txt', 'r') as file:
     secret = file.read()
 print(secret)
