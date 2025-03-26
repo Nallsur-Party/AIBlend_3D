@@ -14,6 +14,8 @@
 3. Запустите код, следуя комментариям внутри скрипта.
 4. Получите URL сервера, который можно использовать для генерации 3D-объектов в Blender.
 
+### 2. [Как использовать аддон в Blender](https://github.com/Nallsur-Party/AIBlend_3D/edit/2-template-for-google-colab/README.md)
+
 ## Требования
 - Python 3.8+
 - Google Colab или собственный сервер с API
