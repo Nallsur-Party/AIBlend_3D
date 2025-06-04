@@ -4,7 +4,7 @@ import tempfile
 import os
 
 bl_info = {
-    "name": "Генерация 3D-объекта",
+    "name": "AIBlend_3D",
     "author": "NaLLsuR",
     "version": (1, 0),
     "blender": (3, 0, 0),
@@ -15,11 +15,11 @@ bl_info = {
 
 class PLYGeneratorPanel(bpy.types.Panel):
     """Панель для генерации 3D объектов"""
-    bl_label = "Генератор PLY"
+    bl_label = "Генерация 3D-моделей"
     bl_idname = "VIEW3D_PT_ply_generator"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Генерация'
+    bl_category = 'AIBlend_3D'
     
     def draw(self, context):
         layout = self.layout
